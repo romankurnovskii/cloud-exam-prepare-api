@@ -1,0 +1,14 @@
+{
+  "name": "cloud-exam-prepare-api",
+  "version": "1.0.0",
+  "description": "cloud-exam-prepare-api",
+  "author": "",
+  "devDependencies": {
+    "serverless-dotenv-plugin": "^4.0.2",
+    "serverless-python-requirements": "^5.4.0",
+    "serverless-wsgi": "^1.7.8"
+  },
+  "dependencies": {
+    "serverless-dynamodb-local": "^0.2.40"
+  }
+}

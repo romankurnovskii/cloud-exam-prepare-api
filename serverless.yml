@@ -1,0 +1,66 @@
+org: romankurnovskii
+app: cloud-exam-prepare
+service: cloud-exam-prepare-api
+
+frameworkVersion: '3'
+
+useDotenv: true
+
+custom:
+  wsgi:
+    app: src/app.app
+    packRequirements: false
+  # pythonRequirements:
+  #   useDownloadCache: true
+  #   useStaticCache: true
+
+  # dynamodb:
+  #   stages:
+  #     - dev
+  #   start:
+  #     port: 8000
+  #     inMemory: true
+  #     heapInitial: 200m
+  #     heapMax: 1g
+  #     migrate: true
+  #     seed: true
+  #     convertEmptyValues: true
+
+provider:
+  name: aws
+  deploymentMethod: direct
+  region: eu-west-1
+  runtime: python3.9
+  architecture: arm64
+  versionFunctions: false
+  memorySize: 256
+
+functions:
+  api:
+    handler: wsgi_handler.handler
+    events:
+      - httpApi: '*'
+    environment:
+      MONGO_CONNECTION_STRING: ${env:MONGO_CONNECTION_STRING}
+      MONGO_COLLECTION_AWSQUESTIONS: ${env:MONGO_COLLECTION_AWSQUESTIONS}
+      COGNITO_CLIENT_ID: ${env:COGNITO_CLIENT_ID}
+      COGNITO_POOL_DOMAIN: ${env:COGNITO_POOL_DOMAIN}
+      COGNITO_REDIRECT_URI: ${env:COGNITO_REDIRECT_URI}
+      COGNITO_REGION: ${env:COGNITO_REGION}
+      COGNITO_USER_POOL_ID: ${env:COGNITO_USER_POOL_ID}
+
+package:
+  patterns:
+    - '!.dynamodb/**'
+    - '!.git/**'
+    - '!.vscode/**'
+    - '!.env'
+    - '!node_modules/**'
+    - '!tmp/**'
+    - '!venv/**'
+    - '!__pycache__/**'
+
+plugins:
+  - serverless-wsgi
+  - serverless-python-requirements
+  
