@@ -13,12 +13,12 @@ blp_questions = Blueprint('questions', __name__)
 @blp_questions.route("/getQuestion", methods=["POST"])
 @if_authorized
 def get_question_handler(token_data):
-    payload = request.get_json()
+    payload = request.get_json() or {}
     question_id = payload.get('question_id')
     if not question_id:
-        return {} #TODO
+        return {}  # TODO
     q = get_question(question_id)
-    return jsonify({"status": ResponseStatus.SUCCESS.name, 'data':q})
+    return jsonify({"status": ResponseStatus.SUCCESS.name, 'data': q})
 
 
 @blp_questions.route("/getRandomQuestion", methods=["POST"])
@@ -42,12 +42,14 @@ def get_randon_question_handler(token_data):
                 "correct_answers_count": 2,
                 "explanation": "str",
                 "publish_date": "Thu, 01 Sep 2022 07:47:28 GMT",
+                "exam_code": "AWS-DVS-C02",
                 "question_text": "str"
             },
             "questionsCount": 3
             }
     '''
-    return get_random_question(token_data)
+    exam_code = token_data['payload'].get('examCode')
+    return get_random_question(token_data, exam_code)
 
 
 @blp_questions.route("/addNewQuestion", methods=["POST"])
@@ -62,7 +64,6 @@ def put_question_handler(token_data):
 def add_user_answer_handler(token_data):
     payload = request.get_json()
     return add_user_answer(token_data, payload)
-
 
 
 @blp_questions.route("/syncQuestions", methods=["POST"])

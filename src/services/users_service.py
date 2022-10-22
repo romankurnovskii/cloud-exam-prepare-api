@@ -4,7 +4,7 @@ from flask import request, jsonify
 from pymongo.collection import Collection
 
 from src.common.configs import ResponseStatus
-from src.db.aws_exam_schema import AwsExamValidator
+from src.db.aws_exam_schema import QuestionDataType
 from src.db.mongo import db_aws_questions
 
 users_collection = db_aws_questions.users
@@ -45,6 +45,8 @@ def get_user_info(token_data):
         }
         if user.get("canAddQuestions"):
             data["canAddQuestions"] = True
+        if subscriptions := user.get("subscriptions"):
+            data['subscriptions'] = subscriptions
         
         return data
     except Exception:

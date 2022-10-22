@@ -33,7 +33,7 @@ provider:
   runtime: python3.9
   architecture: arm64
   versionFunctions: false
-  memorySize: 256
+  memorySize: 128
 
 functions:
   api:

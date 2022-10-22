@@ -111,3 +111,10 @@ serverless wsgi serve
 
 For additional local development capabilities of `serverless-wsgi` plugin, please refer to corresponding [GitHub repository](https://github.com/logandk/serverless-wsgi).
 
+or
+
+```bash
+export FLASK_ENV=development
+export FLASK_APP=src/app
+flask run
+```
