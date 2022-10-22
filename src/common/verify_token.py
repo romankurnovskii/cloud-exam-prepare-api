@@ -22,7 +22,8 @@ COGNITO_USER_POOL_ID = os.environ.get("COGNITO_USER_POOL_ID")
 
 SERVER_URL = "https://cognito-idp." + COGNITO_REGION + ".amazonaws.com"
 
-COGNITO_KEYS_URL = "/".join([SERVER_URL, COGNITO_USER_POOL_ID, ".well-known/jwks.json"])
+COGNITO_KEYS_URL = "/".join([SERVER_URL,
+                            COGNITO_USER_POOL_ID, ".well-known/jwks.json"])
 
 COGNITO_ACCESS_TOKEN_NAME = "CognitoAccessToken"
 COGNITO_ID_TOKEN_NAME = "CognitoIdToken"
@@ -86,7 +87,7 @@ def verify_token(token):
             return verify_data
     except Exception as ex:
         print(ex)
-        
+
     # now we can use the claims
     print("Updating verify data response")
     verify_data["is_valid"] = True
@@ -99,7 +100,7 @@ def token_required(f):
     def decorated(*args, **kwargs):
         payload = request.get_json()
         token = payload.get("visitorInfo", None)  # jwt token
-        
+
         if not token:
             return {
                 "message": "Authentication Token is missing!",
@@ -113,10 +114,10 @@ def token_required(f):
             # user = users_db.find_one({"sub": user_sub})
             if not user:
                 return {
-                "message": "User not found",
-                "data": None,
-                "error": "User not found",
-            }, 401
+                    "message": "User not found",
+                    "data": None,
+                    "error": "User not found",
+                }, 401
 
             verify_data["data"].update(user)
         except Exception as exc:
@@ -125,7 +126,7 @@ def token_required(f):
                 "data": None,
                 "error": str(exc),
             }, 500
-
+        verify_data["payload"] = payload
         return f(verify_data, *args, **kwargs)
 
     return decorated
@@ -134,7 +135,7 @@ def token_required(f):
 def if_authorized(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        payload = request.get_json()
+        payload = request.get_json() or {}
         token = payload.get("visitorInfo", None)  # jwt token
         verify_data = {}
         if token:
@@ -146,6 +147,7 @@ def if_authorized(f):
                     "data": None,
                     "error": str(exc),
                 }, 500
+        verify_data["payload"] = payload
         return f(verify_data, *args, **kwargs)
 
     return decorated

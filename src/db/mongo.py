@@ -10,5 +10,5 @@ MONGO_COLLECTION_AWS_QUESTIONS = os.environ.get(
 )
 
 
-db_client_aws_questions = MongoClient(MONGO_CONNECTION_STRING)
-db_aws_questions = db_client_aws_questions[MONGO_COLLECTION_AWS_QUESTIONS]
+mongo_client = MongoClient(MONGO_CONNECTION_STRING)
+db_aws_questions = mongo_client[MONGO_COLLECTION_AWS_QUESTIONS]

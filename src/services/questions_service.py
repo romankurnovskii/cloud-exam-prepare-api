@@ -3,26 +3,45 @@ from datetime import datetime as dt
 from flask import jsonify
 from pymongo.collection import Collection
 
-from src.common.configs import ResponseStatus
-from src.db.aws_exam_schema import AwsExamValidator, MetaDataType, MetaDataValidator
+from src.common.configs import ExamSubscriptions, ResponseStatus
+from src.common.validator import is_view_exam_alowed
+from src.db.aws_exam_schema import QuestionDataType, MetaDataType, MetaDataValidator
 from src.db.mongo import db_aws_questions
 
 users_collection = db_aws_questions.users
-questions_collection: Collection[AwsExamValidator] = db_aws_questions.questions
+questions_collection: Collection[QuestionDataType] = db_aws_questions.questions
 meta_data_collection: Collection[MetaDataValidator] = db_aws_questions.meta
 
 
+# TODO add specific to exam code metadata
 def _get_meta_data():
     return meta_data_collection.find_one({"type": MetaDataType.QUESTIONS.name})
 
 
-def _update_meta_data():
+def update_meta_data():
+    ''' update last update date '''
     meta_data_collection.find_one_and_update(
         {"type": MetaDataType.QUESTIONS.name},
         {'$set': {
             'last_updated': dt.now()
         }},
         upsert=True)
+
+
+def get_exam_code_metadata(exam_code):
+    exams = get_exams_list()
+    exam = list(filter(lambda x: (x['code'] == exam_code),exams))
+
+    if not exam:
+        return False, ResponseStatus.EXAM_NOT_FOUND
+    return True, exam[0]
+
+
+def get_exams_list():
+    meta_data = meta_data_collection.find_one(
+        {"type": MetaDataType.EXAMS.value})
+    exams = meta_data.get('exams', [])
+    return exams
 
 
 def get_question(question_id):
@@ -32,7 +51,7 @@ def get_question(question_id):
     return q
 
 
-def get_random_question(token_data):
+def get_random_question(token_data=None, exam_code=None) -> QuestionDataType:
     """
     return:
     {
@@ -41,16 +60,59 @@ def get_random_question(token_data):
         questionsCount: number
     }
     """
-    question = questions_collection.aggregate([{
-        "$sample": {
-            "size": 1
-        }
-    }]).next()
-    count = questions_collection.count_documents({})
+    if not exam_code:
+        #TODO
+        exam_code = ExamSubscriptions.AWS_DVA_C02.value
+        # response = jsonify({
+        #             "error": True,
+        #             "message": "Exam code is not provided"
+        #         })
+        #         return response, 400
+    else:
+        found, exam_data = get_exam_code_metadata(exam_code)
+        if not found:
+            response = jsonify({
+                "error": True,
+                "message": "Exam code not found"
+            })
+            return response, 400
+        if not exam_data['free']:
+            # TODO
+            alowed = is_view_exam_alowed(token_data, exam_code)
+            if not alowed:
+                response = jsonify({
+                    "error": True,
+                    "message": "Exam is not free"
+                })
+                return response, 400
+    
+
+    
+    questions = list(questions_collection.aggregate([
+        {"$match": {"exam_code": {"$eq": exam_code}}},
+        {"$sample": {"size": 1}}
+    ]))
+
+
+    print(71, questions, exam_code)
+    question = None
+    if questions:
+        question = questions[0]
+    else:
+        response = jsonify({
+            "error": True,
+            "message": "No questions found"
+        })
+        return response, 400
+
+    count = questions_collection.count_documents({
+        "exam_code": {"$eq": exam_code}
+    })
 
     question_response = {}
     if question:
         question_response["_id"] = str(question["_id"])
+        question_response['exam_code'] = question.get('exam_code')
         question_response['question_text'] = question.get('question_text')
         question_response['correct_answers_count'] = question.get(
             'correct_answers_count')
@@ -77,7 +139,7 @@ def put_question(token_data, payload):
         }, 401
 
     question_data = {}
-    for k in AwsExamValidator.__annotations__.keys():
+    for k in QuestionDataType.__annotations__.keys():
         try:
             question_data[k] = payload[k]
         except Exception as e:
@@ -85,7 +147,7 @@ def put_question(token_data, payload):
 
     question_data['publish_date'] = dt.now()
     result = questions_collection.insert_one(question_data)
-    _update_meta_data()
+    update_meta_data()
     return {"status": "success", 'id': str(result.inserted_id)}
 
 
@@ -94,7 +156,7 @@ def update_question(question):
     res = questions_collection.find_one_and_update(
         {'_id': ObjectId(question_id)}, question)
     if res:
-        _update_meta_data()
+        update_meta_data()
     return res
 
 
@@ -253,5 +315,5 @@ def sync_questions_with_local_db(token_data):
             question_data['publish_date'] = dt.now()
 
             # insert_to_db(question_data)
-        _update_meta_data()
+        update_meta_data()
         return z
