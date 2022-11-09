@@ -48,7 +48,7 @@ def get_randon_question_handler(token_data):
             "questionsCount": 3
             }
     '''
-    exam_code = token_data['payload'].get('examCode')
+    exam_code = token_data['payload'].get('exam_code')
     return get_random_question(token_data, exam_code)
 
 
