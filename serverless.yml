@@ -49,6 +49,10 @@ functions:
       COGNITO_REGION: ${env:COGNITO_REGION}
       COGNITO_USER_POOL_ID: ${env:COGNITO_USER_POOL_ID}
 
+plugins:
+  - serverless-wsgi
+  - serverless-python-requirements
+
 package:
   patterns:
     - '!.dynamodb/**'
@@ -58,9 +62,4 @@ package:
     - '!node_modules/**'
     - '!tmp/**'
     - '!venv/**'
-    - '!__pycache__/**'
-
-plugins:
-  - serverless-wsgi
-  - serverless-python-requirements
-  
+    - '!__pycache__/**'  
