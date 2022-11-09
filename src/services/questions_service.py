@@ -94,7 +94,6 @@ def get_random_question(token_data=None, exam_code=None) -> QuestionDataType:
     ]))
 
 
-    print(71, questions, exam_code)
     question = None
     if questions:
         question = questions[0]
@@ -131,6 +130,7 @@ def get_random_question(token_data=None, exam_code=None) -> QuestionDataType:
 
 
 def put_question(token_data, payload):
+    ''' Create new question '''
     can_add_questions = token_data["data"].get("canAddQuestions")
     if not can_add_questions:
         return {
