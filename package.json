@@ -5,7 +5,7 @@
   "author": "",
   "devDependencies": {
     "serverless-dotenv-plugin": "^4.0.2",
-    "serverless-python-requirements": "^5.4.0",
+    "serverless-python-requirements": "^6.0.0",
     "serverless-wsgi": "^1.7.8"
   },
   "dependencies": {
