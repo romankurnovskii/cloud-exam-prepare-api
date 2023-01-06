@@ -94,7 +94,7 @@ You should receive the following response:
 {"error":"Not Found!"}
 ```
 
-### Local development
+## Local development
 
 Thanks to capabilities of `serverless-wsgi`, it is also possible to run your application locally, however, in order to do that, you will need to first install `werkzeug` dependency, as well as all other dependencies listed in `requirements.txt`. It is recommended to use a dedicated virtual environment for that purpose. You can install all needed dependencies with the following commands:
 

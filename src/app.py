@@ -4,6 +4,7 @@ from flask_cors import CORS
 
 from src.controllers import blp_aws_exam
 from src.controllers.comments_controller import blp_comments
+from src.controllers.exams_controller import blp_exams
 from src.controllers.questions_controller import blp_questions
 from src.controllers.users_controller import blp_users
 
@@ -14,8 +15,9 @@ cors = CORS(app)
 
 
 app.register_blueprint(blp_aws_exam, url_prefix="/aws")
-app.register_blueprint(blp_comments, url_prefix="/aws")
+app.register_blueprint(blp_exams, url_prefix="/aws")
 app.register_blueprint(blp_questions, url_prefix="/aws")
+app.register_blueprint(blp_comments, url_prefix="/aws")
 app.register_blueprint(blp_users, url_prefix="/aws")
 
 

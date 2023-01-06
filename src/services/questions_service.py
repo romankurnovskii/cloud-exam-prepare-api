@@ -7,6 +7,7 @@ from src.common.configs import ExamSubscriptions, ResponseStatus
 from src.common.validator import is_view_exam_alowed
 from src.db.aws_exam_schema import QuestionDataType, MetaDataType, MetaDataValidator
 from src.db.mongo import db_aws_questions
+from src.services.exams_service import get_exam_metadata
 
 
 users_collection = db_aws_questions.users
@@ -29,24 +30,6 @@ def update_meta_data():
             'last_updated': dt.now()
         }},
         upsert=True)
-
-
-# -------- EXAM
-
-def get_exams_list():
-    meta_data = meta_data_collection.find_one(
-        {"type": MetaDataType.EXAMS.value})
-    exams = meta_data.get('exams', [])
-    return exams
-
-
-def get_exam_metadata(exam_code):
-    exams = get_exams_list()
-    exam = list(filter(lambda x: (x['code'] == exam_code),exams))
-
-    if not exam:
-        return False, ResponseStatus.EXAM_NOT_FOUND
-    return True, exam[0]
 
 
 # -------- QUESTION
@@ -141,7 +124,7 @@ def put_question(token_data, payload):
     can_add_questions = token_data["data"].get("canAddQuestions")
     if not can_add_questions:
         return {
-            "error": "Account dos not have permissions to add questions",
+            "error": "Account does not have permissions to add questions",
             "status": ResponseStatus.ERROR.name,
         }, 401
 
@@ -173,18 +156,16 @@ def add_user_answer(verify_data, payload):
     user = None
     question_id = payload.get("question_id")
     answers_id = payload.get("answers_id")
-    if not all([question_id, answers_id]):
-        return jsonify({
-            "status": ResponseStatus.ERROR.name,
-            "message": "wrong data"
-        })
 
     question = questions_collection.find_one({"_id": ObjectId(question_id)})
-    if not question:
+
+    if not all([question_id, answers_id, question]):
         return jsonify({
             "status": ResponseStatus.ERROR.name,
             "message": "wrong data (maybe question not found)"
         })
+
+    question_exam_code = question.get('exam_code')
 
     is_valid = verify_data.get("is_valid")
     if is_valid:
@@ -200,19 +181,27 @@ def add_user_answer(verify_data, payload):
 
         # update user's progress data
         progress = user.get("progress")
-        question = progress["questions"].get(question_id)
+
         # if already answered
         questions_correct = progress["questions_correct"]
         questions_wrong = progress["questions_wrong"]
-        if question is None:
+
+        exams_data = progress.get('exams', {}).get('question_exam_code', {})
+        correct_by_exam = exams_data.get('questions_correct', 0)
+        wrong_by_exam = exams_data.get('questions_wrong', 0)
+
+        question_answer = progress["questions"].get(question_id)
+        if question_answer is None:
             progress["questions_answered"] += 1
             if is_correct:
                 questions_correct += 1
+                correct_by_exam += 1
             else:
                 questions_wrong += 1
+                wrong_by_exam += 1
         else:
             # prev result answer: boolean
-            if question:  # was answered correct
+            if question_answer:  # was answered correct before
                 if not is_correct:
                     questions_correct -= 1
                     questions_wrong += 1
@@ -224,6 +213,16 @@ def add_user_answer(verify_data, payload):
         progress["questions"][question_id] = is_correct
         progress["questions_correct"] = questions_correct
         progress["questions_wrong"] = questions_wrong
+
+        if progress.get('exams') is None:
+            progress['exams'] = {}
+        if progress['exams'].get('question_exam_code') is None:
+            progress['exams'][question_exam_code] = {}
+
+        progress['exams'][question_exam_code]['questions_correct'] = correct_by_exam
+        progress['exams'][question_exam_code]['questions_wrong'] = wrong_by_exam
+
+        print(219, progress)
 
         users_collection.update_one(
             {"sub": user_sub},
@@ -301,13 +300,13 @@ def _convert_old_to_question_data(q):
     }
 
 
-def _sync_questions_with_local_db(token_data):
+def sync_questions_with_local_db(token_data):
     # define source
     can_add_questions = token_data["data"].get("canAddQuestions")
 
     # if not can_add_questions:
     #     return {
-    #         "error": "Account dos not have permissions to add questions",
+    #         "error": "Account does not have permissions to add questions",
     #         "status": ResponseStatus.ERROR.name,
     #     }, 401
 
