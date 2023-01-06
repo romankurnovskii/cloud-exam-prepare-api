@@ -25,10 +25,16 @@ class ExamCodes(Enum):
         "title": "AWS Certified Solutions Architect - Associate",
         "mongo_collection": 'questions-aws-saa-co3'
     }
-
+    AWS_SOLUTIONS_ARCHITECT_PROFESSIONAL = {
+        "exam_code": "AWS_SAP_C02",
+        "title": "AWS Certified Solutions Architect - Professional",
+        "mongo_collection": 'questions-aws-sap-co2'
+    }
 
 class ExamSubscriptions(Enum):
     ALL = "ALL"
     AWS_CLF_C01 = "AWS_CLF_C01"
     AWS_DVA_C02 = "AWS_DVA_C02"
     AWS_SAA_C03 = "AWS_SAA_C03"
+    AWS_SAP_C02 = "AWS_SAP_C02"
+

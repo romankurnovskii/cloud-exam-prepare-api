@@ -8,10 +8,13 @@ from src.common.validator import is_view_exam_alowed
 from src.db.aws_exam_schema import QuestionDataType, MetaDataType, MetaDataValidator
 from src.db.mongo import db_aws_questions
 
+
 users_collection = db_aws_questions.users
 questions_collection: Collection[QuestionDataType] = db_aws_questions.questions
 meta_data_collection: Collection[MetaDataValidator] = db_aws_questions.meta
 
+
+# -------- SETTINGS METADATA
 
 # TODO add specific to exam code metadata
 def _get_meta_data():
@@ -28,7 +31,16 @@ def update_meta_data():
         upsert=True)
 
 
-def get_exam_code_metadata(exam_code):
+# -------- EXAM
+
+def get_exams_list():
+    meta_data = meta_data_collection.find_one(
+        {"type": MetaDataType.EXAMS.value})
+    exams = meta_data.get('exams', [])
+    return exams
+
+
+def get_exam_metadata(exam_code):
     exams = get_exams_list()
     exam = list(filter(lambda x: (x['code'] == exam_code),exams))
 
@@ -37,12 +49,7 @@ def get_exam_code_metadata(exam_code):
     return True, exam[0]
 
 
-def get_exams_list():
-    meta_data = meta_data_collection.find_one(
-        {"type": MetaDataType.EXAMS.value})
-    exams = meta_data.get('exams', [])
-    return exams
-
+# -------- QUESTION
 
 def get_question(question_id):
     q = questions_collection.find_one({"_id": ObjectId(question_id)})
@@ -69,7 +76,7 @@ def get_random_question(token_data=None, exam_code=None) -> QuestionDataType:
         #         })
         #         return response, 400
     else:
-        found, exam_data = get_exam_code_metadata(exam_code)
+        found, exam_data = get_exam_metadata(exam_code)
         if not found:
             response = jsonify({
                 "error": True,
@@ -160,6 +167,8 @@ def update_question(question):
     return res
 
 
+# -------- ANSWER
+
 def add_user_answer(verify_data, payload):
     user = None
     question_id = payload.get("question_id")
@@ -231,6 +240,8 @@ def add_user_answer(verify_data, payload):
     })
 
 
+# -------- INSERT QUESTIONS TO DB
+
 def _convert_udemy_to_question_data(question):
 
     id = question['id']
@@ -290,7 +301,7 @@ def _convert_old_to_question_data(q):
     }
 
 
-def sync_questions_with_local_db(token_data):
+def _sync_questions_with_local_db(token_data):
     # define source
     can_add_questions = token_data["data"].get("canAddQuestions")
 
