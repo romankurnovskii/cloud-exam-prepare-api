@@ -31,6 +31,8 @@ class ExamCodes(Enum):
         "mongo_collection": 'questions-aws-sap-co2'
     }
 
+
+# don't use, migrated to DB
 class ExamSubscriptions(Enum):
     ALL = "ALL"
     AWS_CLF_C01 = "AWS_CLF_C01"

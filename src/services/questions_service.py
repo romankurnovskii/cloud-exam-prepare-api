@@ -186,43 +186,77 @@ def add_user_answer(verify_data, payload):
         questions_correct = progress["questions_correct"]
         questions_wrong = progress["questions_wrong"]
 
-        exams_data = progress.get('exams', {}).get('question_exam_code', {})
+        if progress.get('exams') is None:
+            progress['exams'] = {}
+        if progress['exams'].get(question_exam_code) is None:
+            progress['exams'][question_exam_code] = {}
+
+        exams_data = progress['exams'][question_exam_code]
         correct_by_exam = exams_data.get('questions_correct', 0)
         wrong_by_exam = exams_data.get('questions_wrong', 0)
 
         question_answer = progress["questions"].get(question_id)
-        if question_answer is None:
-            progress["questions_answered"] += 1
+        print(199, question_answer)
+
+        if question_answer in [True, False]: # already answered
+            if question_answer: # was answered CORRECT before
+                if not is_correct:
+                    questions_correct -= 1
+                    correct_by_exam -= 1
+                    questions_wrong += 1
+                    wrong_by_exam += 1
+            else:
+                if is_correct:
+                    questions_correct += 1
+                    correct_by_exam += 1
+                    questions_wrong -= 1
+                    wrong_by_exam -= 1
+        else: # new question
+            print(209, question_answer)
             if is_correct:
                 questions_correct += 1
                 correct_by_exam += 1
             else:
                 questions_wrong += 1
                 wrong_by_exam += 1
-        else:
-            # prev result answer: boolean
-            if question_answer:  # was answered correct before
-                if not is_correct:
-                    questions_correct -= 1
-                    questions_wrong += 1
-            else:  # was incorrect before
-                if is_correct:
-                    questions_correct += 1
-                    questions_wrong -= 1
+
+        # if question_answer is None: # if already andswered
+        #     progress["questions_answered"] += 1
+        #     if is_correct:
+        #         questions_correct += 1
+        #         correct_by_exam += 1
+        #     else:
+        #         questions_wrong += 1
+        #         wrong_by_exam += 1
+        # else:
+        #     # prev result answer: boolean
+        #     if question_answer:  # was answered correct before
+        #         if not is_correct:
+        #             questions_correct -= 1
+        #             questions_wrong += 1
+        #             correct_by_exam -=1
+        #             wrong_by_exam += 1
+        #     else:  # was incorrect before
+        #         if is_correct:
+        #             questions_correct += 1
+        #             questions_wrong -= 1
+        #             correct_by_exam +=1
+        #             wrong_by_exam -= 1
 
         progress["questions"][question_id] = is_correct
         progress["questions_correct"] = questions_correct
         progress["questions_wrong"] = questions_wrong
 
-        if progress.get('exams') is None:
-            progress['exams'] = {}
-        if progress['exams'].get('question_exam_code') is None:
-            progress['exams'][question_exam_code] = {}
-
+        if wrong_by_exam < 1:
+            wrong_by_exam = 0
+        if correct_by_exam < 1:
+            correct_by_exam = 0
         progress['exams'][question_exam_code]['questions_correct'] = correct_by_exam
         progress['exams'][question_exam_code]['questions_wrong'] = wrong_by_exam
 
-        print(219, progress)
+
+        print(11, progress['exams'])
+
 
         users_collection.update_one(
             {"sub": user_sub},
