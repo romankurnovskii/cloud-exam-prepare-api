@@ -9,10 +9,13 @@ useDotenv: true
 custom:
   wsgi:
     app: src/app.app
-    packRequirements: false
-  # pythonRequirements:
-  #   useDownloadCache: true
-  #   useStaticCache: true
+    # packRequirements: false
+  pythonRequirements: # https://www.npmjs.com/package/serverless-python-requirements
+    zip: true
+    useDownloadCache: true
+    useStaticCache: true
+    staticCacheMaxVersions: 10
+    dockerizePip: true
 
   # dynamodb:
   #   stages:
@@ -30,7 +33,7 @@ provider:
   name: aws
   deploymentMethod: direct
   region: eu-west-1
-  runtime: python3.9
+  runtime: python3.8
   architecture: arm64
   versionFunctions: false
   memorySize: 128
@@ -62,4 +65,4 @@ package:
     - '!node_modules/**'
     - '!tmp/**'
     - '!venv/**'
-    - '!__pycache__/**'  
+    - '!__pycache__/**'
