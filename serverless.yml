@@ -14,7 +14,7 @@ custom:
     zip: true
     useDownloadCache: true
     useStaticCache: true
-    staticCacheMaxVersions: 10
+    # staticCacheMaxVersions: 10
     dockerizePip: true
 
   # dynamodb:
@@ -33,7 +33,7 @@ provider:
   name: aws
   deploymentMethod: direct
   region: eu-west-1
-  runtime: python3.8
+  runtime: python3.9
   architecture: arm64
   versionFunctions: false
   memorySize: 128
