@@ -1,6 +1,6 @@
 from flask import Blueprint, request
 
-from src.common.verify_token import if_authorized, token_required
+from src.common.verify_token import token_required
 from src.services.comments_service import add_comment
 
 

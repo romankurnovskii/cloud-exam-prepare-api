@@ -2,7 +2,6 @@ from flask import Blueprint,  request, jsonify
 
 from src.common.configs import ResponseStatus
 
-from . import blp_aws_exam
 from src.common.verify_token import if_authorized, token_required
 from src.services.questions_service import add_user_answer, get_question, get_random_question, put_question, sync_questions_with_local_db
 

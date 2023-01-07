@@ -1,10 +1,6 @@
-from bson.objectid import ObjectId
-from datetime import datetime as dt
-from flask import jsonify
 from pymongo.collection import Collection
 
-from src.common.configs import ExamSubscriptions, ResponseStatus
-from src.common.validator import is_view_exam_alowed
+from src.common.configs import  ResponseStatus
 from src.db.aws_exam_schema import QuestionDataType, MetaDataType, MetaDataValidator
 from src.db.mongo import db_aws_questions
 

@@ -1,12 +1,10 @@
 from bson.objectid import ObjectId
 from datetime import datetime as dt
-from flask import request, jsonify
 from pymongo.collection import Collection
 
 from src.common.configs import ResponseStatus
 from src.db.aws_exam_schema import QuestionDataType
 from src.db.mongo import db_aws_questions
-from src.services.questions_service import get_question, update_question
 from src.services.users_service import get_user_info
 
 users_collection = db_aws_questions.users

@@ -8,8 +8,6 @@ from src.services.users_service import get_user_info, get_progress_data, update_
 users_collection = db_aws_questions.users
 questions_collection = db_aws_questions.questions
 
-from . import blp_aws_exam
-
 
 blp_users = Blueprint('users', __name__)
 
