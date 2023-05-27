@@ -13,22 +13,22 @@ class ExamCodes(Enum):
     AWS_CLOUD_PRACTITIONER = {
         "exam_code": "AWS_CLF_C01",
         "title": "AWS Certified Cloud Practitioner",
-        "mongo_collection": 'questions-aws-clf-c01'
+        "mongo_collection": "questions-aws-clf-c01",
     }
     AWS_DEVELOPER_ASSOCIATE = {
         "exam_code": "AWS_DVA_C02",
         "title": "AWS Certified Developer - Associate",
-        "mongo_collection": 'questions'
+        "mongo_collection": "questions",
     }
     AWS_SOLUTIONS_ARCHITECT_ASSOCIATE = {
         "exam_code": "AWS_SAA_C03",
         "title": "AWS Certified Solutions Architect - Associate",
-        "mongo_collection": 'questions-aws-saa-co3'
+        "mongo_collection": "questions-aws-saa-co3",
     }
     AWS_SOLUTIONS_ARCHITECT_PROFESSIONAL = {
         "exam_code": "AWS_SAP_C02",
         "title": "AWS Certified Solutions Architect - Professional",
-        "mongo_collection": 'questions-aws-sap-co2'
+        "mongo_collection": "questions-aws-sap-co2",
     }
 
 
@@ -39,4 +39,3 @@ class ExamSubscriptions(Enum):
     AWS_DVA_C02 = "AWS_DVA_C02"
     AWS_SAA_C03 = "AWS_SAA_C03"
     AWS_SAP_C02 = "AWS_SAP_C02"
-

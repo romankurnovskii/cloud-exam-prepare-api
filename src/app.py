@@ -28,17 +28,17 @@ app.register_blueprint(blp_users, url_prefix="/aws")
 
 @app.route("/")
 def hello():
-    return jsonify(message='Hello!')
+    return jsonify(message="Hello!")
 
 
 @app.errorhandler(404)
 def resource_not_found(e):
-    return make_response(jsonify(error='Not found!'), 404)
+    return make_response(jsonify(error="Not found!"), 404)
 
 
 def internal_server_error(e):
     print(e)
-    return 'error', 500
+    return "error", 500
 
 
 app.register_error_handler(500, internal_server_error)

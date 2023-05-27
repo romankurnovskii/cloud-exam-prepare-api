@@ -22,8 +22,7 @@ COGNITO_USER_POOL_ID = os.environ.get("COGNITO_USER_POOL_ID")
 
 SERVER_URL = "https://cognito-idp." + COGNITO_REGION + ".amazonaws.com"
 
-COGNITO_KEYS_URL = "/".join([SERVER_URL,
-                            COGNITO_USER_POOL_ID, ".well-known/jwks.json"])
+COGNITO_KEYS_URL = "/".join([SERVER_URL, COGNITO_USER_POOL_ID, ".well-known/jwks.json"])
 
 COGNITO_ACCESS_TOKEN_NAME = "CognitoAccessToken"
 COGNITO_ID_TOKEN_NAME = "CognitoIdToken"

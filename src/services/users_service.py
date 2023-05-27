@@ -1,4 +1,3 @@
-
 from flask import request, jsonify
 
 from src.common.configs import ResponseStatus
@@ -17,25 +16,24 @@ def get_user_info(token_data):
     try:
         user = users_collection.find_one({"sub": user_sub})
         if user is None:
-            user = users_collection.insert_one({
-                "sub":
-                user_sub,
-                "name":
-                token_data["data"].get("name"),
-                "email":
-                token_data["data"].get("email"),
-                "progress": {
-                    "questions_answered": 0,
-                    "questions_correct": 0,
-                    "questions_wrong": 0,
-                    "questions": {},
-                },
-            })
+            user = users_collection.insert_one(
+                {
+                    "sub": user_sub,
+                    "name": token_data["data"].get("name"),
+                    "email": token_data["data"].get("email"),
+                    "progress": {
+                        "questions_answered": 0,
+                        "questions_correct": 0,
+                        "questions_wrong": 0,
+                        "questions": {},
+                    },
+                }
+            )
             user = users_collection.find_one({"sub": user_sub})
             if user is None:
                 return None
         data = {
-            '_id': str(user.get('_id')),
+            "_id": str(user.get("_id")),
             "name": user.get("name"),
             "email": user.get("email"),
             "progress": user.get("progress"),
@@ -43,15 +41,15 @@ def get_user_info(token_data):
         if user.get("canAddQuestions"):
             data["canAddQuestions"] = True
         if subscriptions := user.get("subscriptions"):
-            data['subscriptions'] = subscriptions
-        
+            data["subscriptions"] = subscriptions
+
         return data
     except Exception:
         return None
 
 
 def update_user_data(verify_data):
-    ''' update username '''
+    """update username"""
     is_valid = verify_data.get("is_valid")
     if not is_valid:
         return {"error": "Invalid token", "status": ResponseStatus.ERROR.name}
@@ -61,14 +59,8 @@ def update_user_data(verify_data):
     name = payload["name"]
     if name:
         result = users_collection.update_one(
-            {
-                "sub": user_sub,
-                "name": {
-                    "$ne": name
-                }
-            }, {"$set": {
-                "name": name
-            }})
+            {"sub": user_sub, "name": {"$ne": name}}, {"$set": {"name": name}}
+        )
         return jsonify({"status": ResponseStatus.SUCCESS.name}), 201
 
 
@@ -81,11 +73,7 @@ def get_progress_data(token_data):
     try:
         user = users_collection.find_one({"sub": user_sub})
         if user is None:
-            return {
-                "error": "User not found",
-                "status": ResponseStatus.ERROR.name
-            }, 401
+            return {"error": "User not found", "status": ResponseStatus.ERROR.name}, 401
         return jsonify({"data": user.get("progress")})
     except Exception:
         return {"error": "User not found"}, 401
-

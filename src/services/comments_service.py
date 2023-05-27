@@ -13,17 +13,19 @@ questions_collection: Collection[QuestionDataType] = db_aws_questions.questions
 
 def add_comment(verify_data, payload):
     user_info = get_user_info(verify_data)
-    if user_info.get('status') == ResponseStatus.ERROR.name:
+    if user_info.get("status") == ResponseStatus.ERROR.name:
         return {
-            "error": user_info.get('error', "User not found"),
+            "error": user_info.get("error", "User not found"),
             "status": ResponseStatus.ERROR.name,
         }, 401
 
-    question_id = payload['question_id']
+    question_id = payload["question_id"]
     comment = {
-        'user_id': user_info['_id'],
-        'comment': payload['comment'],
-        'publish_date': dt.now()
+        "user_id": user_info["_id"],
+        "comment": payload["comment"],
+        "publish_date": dt.now(),
     }
-    questions_collection.find_one_and_update({'_id': ObjectId(question_id)}, {'$push': {'comments': comment}})
+    questions_collection.find_one_and_update(
+        {"_id": ObjectId(question_id)}, {"$push": {"comments": comment}}
+    )
     return {"status": "success"}

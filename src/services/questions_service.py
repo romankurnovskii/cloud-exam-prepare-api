@@ -17,27 +17,28 @@ meta_data_collection: Collection[MetaDataValidator] = db_aws_questions.meta
 
 # -------- SETTINGS METADATA
 
+
 # TODO add specific to exam code metadata
 def _get_meta_data():
     return meta_data_collection.find_one({"type": MetaDataType.QUESTIONS.name})
 
 
 def update_meta_data():
-    ''' update last update date '''
+    """update last update date"""
     meta_data_collection.find_one_and_update(
         {"type": MetaDataType.QUESTIONS.name},
-        {'$set': {
-            'last_updated': dt.now()
-        }},
-        upsert=True)
+        {"$set": {"last_updated": dt.now()}},
+        upsert=True,
+    )
 
 
 # -------- QUESTION
 
+
 def get_question(question_id):
     q = questions_collection.find_one({"_id": ObjectId(question_id)})
     if q:
-        q['_id'] = str(q['_id'])
+        q["_id"] = str(q["_id"])
     return q
 
 
@@ -51,7 +52,7 @@ def get_random_question(token_data=None, exam_code=None) -> QuestionDataType:
     }
     """
     if not exam_code:
-        #TODO
+        # TODO
         exam_code = ExamSubscriptions.AWS_DVA_C02.value
         # response = jsonify({
         #             "error": True,
@@ -61,66 +62,56 @@ def get_random_question(token_data=None, exam_code=None) -> QuestionDataType:
     else:
         found, exam_data = get_exam_metadata(exam_code)
         if not found:
-            response = jsonify({
-                "error": True,
-                "message": "Exam code not found"
-            })
+            response = jsonify({"error": True, "message": "Exam code not found"})
             return response, 400
-        if not exam_data['free']:
+        if not exam_data["free"]:
             # TODO
             alowed = is_view_exam_alowed(token_data, exam_code)
             if not alowed:
-                response = jsonify({
-                    "error": True,
-                    "message": "Exam is not free"
-                })
+                response = jsonify({"error": True, "message": "Exam is not free"})
                 return response, 400
-    
 
-    
-    questions = list(questions_collection.aggregate([
-        {"$match": {"exam_code": {"$eq": exam_code}}},
-        {"$sample": {"size": 1}}
-    ]))
-
+    questions = list(
+        questions_collection.aggregate(
+            [{"$match": {"exam_code": {"$eq": exam_code}}}, {"$sample": {"size": 1}}]
+        )
+    )
 
     question = None
     if questions:
         question = questions[0]
     else:
-        response = jsonify({
-            "error": True,
-            "message": "No questions found"
-        })
+        response = jsonify({"error": True, "message": "No questions found"})
         return response, 400
 
-    count = questions_collection.count_documents({
-        "exam_code": {"$eq": exam_code}
-    })
+    count = questions_collection.count_documents({"exam_code": {"$eq": exam_code}})
 
     question_response = {}
     if question:
         question_response["_id"] = str(question["_id"])
-        question_response['exam_code'] = question.get('exam_code')
-        question_response['question_text'] = question.get('question_text')
-        question_response['correct_answers_count'] = question.get(
-            'correct_answers_count')
-        question_response['answers'] = question.get('answers')
-        question_response['comments'] = question.get('comments', [])
+        question_response["exam_code"] = question.get("exam_code")
+        question_response["question_text"] = question.get("question_text")
+        question_response["correct_answers_count"] = question.get(
+            "correct_answers_count"
+        )
+        question_response["answers"] = question.get("answers")
+        question_response["comments"] = question.get("comments", [])
 
     meta_data = _get_meta_data()
     if meta_data:
-        last_updated = meta_data.get('last_updated', '2022')
-    response = jsonify({
-        "data": question_response,
-        "questions_count": count,
-        'last_updated': last_updated
-    })
+        last_updated = meta_data.get("last_updated", "2022")
+    response = jsonify(
+        {
+            "data": question_response,
+            "questions_count": count,
+            "last_updated": last_updated,
+        }
+    )
     return response
 
 
 def put_question(token_data, payload):
-    ''' Create new question '''
+    """Create new question"""
     can_add_questions = token_data["data"].get("canAddQuestions")
     if not can_add_questions:
         return {
@@ -133,24 +124,26 @@ def put_question(token_data, payload):
         try:
             question_data[k] = payload[k]
         except Exception as e:
-            print('no key', e)
+            print("no key", e)
 
-    question_data['publish_date'] = dt.now()
+    question_data["publish_date"] = dt.now()
     result = questions_collection.insert_one(question_data)
     update_meta_data()
-    return {"status": "success", 'id': str(result.inserted_id)}
+    return {"status": "success", "id": str(result.inserted_id)}
 
 
 def update_question(question):
-    question_id = question['_id']
+    question_id = question["_id"]
     res = questions_collection.find_one_and_update(
-        {'_id': ObjectId(question_id)}, question)
+        {"_id": ObjectId(question_id)}, question
+    )
     if res:
         update_meta_data()
     return res
 
 
 # -------- ANSWER
+
 
 def add_user_answer(verify_data, payload):
     user = None
@@ -160,12 +153,14 @@ def add_user_answer(verify_data, payload):
     question = questions_collection.find_one({"_id": ObjectId(question_id)})
 
     if not all([question_id, answers_id, question]):
-        return jsonify({
-            "status": ResponseStatus.ERROR.name,
-            "message": "wrong data (maybe question not found)"
-        })
+        return jsonify(
+            {
+                "status": ResponseStatus.ERROR.name,
+                "message": "wrong data (maybe question not found)",
+            }
+        )
 
-    question_exam_code = question.get('exam_code')
+    question_exam_code = question.get("exam_code")
 
     is_valid = verify_data.get("is_valid")
     if is_valid:
@@ -186,20 +181,20 @@ def add_user_answer(verify_data, payload):
         questions_correct = progress["questions_correct"]
         questions_wrong = progress["questions_wrong"]
 
-        if progress.get('exams') is None:
-            progress['exams'] = {}
-        if progress['exams'].get(question_exam_code) is None:
-            progress['exams'][question_exam_code] = {}
+        if progress.get("exams") is None:
+            progress["exams"] = {}
+        if progress["exams"].get(question_exam_code) is None:
+            progress["exams"][question_exam_code] = {}
 
-        exams_data = progress['exams'][question_exam_code]
-        correct_by_exam = exams_data.get('questions_correct', 0)
-        wrong_by_exam = exams_data.get('questions_wrong', 0)
+        exams_data = progress["exams"][question_exam_code]
+        correct_by_exam = exams_data.get("questions_correct", 0)
+        wrong_by_exam = exams_data.get("questions_wrong", 0)
 
         question_answer = progress["questions"].get(question_id)
         print(199, question_answer)
 
-        if question_answer in [True, False]: # already answered
-            if question_answer: # was answered CORRECT before
+        if question_answer in [True, False]:  # already answered
+            if question_answer:  # was answered CORRECT before
                 if not is_correct:
                     questions_correct -= 1
                     correct_by_exam -= 1
@@ -211,7 +206,7 @@ def add_user_answer(verify_data, payload):
                     correct_by_exam += 1
                     questions_wrong -= 1
                     wrong_by_exam -= 1
-        else: # new question
+        else:  # new question
             print(209, question_answer)
             if is_correct:
                 questions_correct += 1
@@ -251,86 +246,84 @@ def add_user_answer(verify_data, payload):
             wrong_by_exam = 0
         if correct_by_exam < 1:
             correct_by_exam = 0
-        progress['exams'][question_exam_code]['questions_correct'] = correct_by_exam
-        progress['exams'][question_exam_code]['questions_wrong'] = wrong_by_exam
+        progress["exams"][question_exam_code]["questions_correct"] = correct_by_exam
+        progress["exams"][question_exam_code]["questions_wrong"] = wrong_by_exam
 
-
-        print(11, progress['exams'])
-
+        print(11, progress["exams"])
 
         users_collection.update_one(
             {"sub": user_sub},
-            {"$set": {
-                "progress": progress
-            }},
+            {"$set": {"progress": progress}},
         )
 
-    return jsonify({
-        "status": ResponseStatus.SUCCESS.name,
-        'is_answer_correct': is_correct,
-        "correct_answers": correct_answers,
-        'explanation': explanation
-    })
+    return jsonify(
+        {
+            "status": ResponseStatus.SUCCESS.name,
+            "is_answer_correct": is_correct,
+            "correct_answers": correct_answers,
+            "explanation": explanation,
+        }
+    )
 
 
 # -------- INSERT QUESTIONS TO DB
 
-def _convert_udemy_to_question_data(question):
 
-    id = question['id']
-    udemy_answers = question['prompt']['answers']
-    udemy_explanation = question['prompt']['explanation']
-    udemy_question_text = question['prompt']['question']
-    udemy_correct_answers = question['correct_response']
+def _convert_udemy_to_question_data(question):
+    id = question["id"]
+    udemy_answers = question["prompt"]["answers"]
+    udemy_explanation = question["prompt"]["explanation"]
+    udemy_question_text = question["prompt"]["question"]
+    udemy_correct_answers = question["correct_response"]
 
     meta = {
-        'source': 'udemy',
-        'id': id,
+        "source": "udemy",
+        "id": id,
     }
     answers = []
     for i, ans in enumerate(udemy_answers):
-        answer = {'id': i + 1, 'text': ans}
+        answer = {"id": i + 1, "text": ans}
         answers.append(answer)
-    explanation = {'id': 1, 'description': udemy_explanation}
+    explanation = {"id": 1, "description": udemy_explanation}
     correct_answers = []
     for a in udemy_correct_answers:
-        if a == 'a':
+        if a == "a":
             correct_answers.append(1)
-        elif a == 'b':
+        elif a == "b":
             correct_answers.append(2)
-        elif a == 'c':
+        elif a == "c":
             correct_answers.append(3)
-        elif a == 'd':
+        elif a == "d":
             correct_answers.append(4)
-        elif a == 'e':
+        elif a == "e":
             correct_answers.append(5)
-        elif a == 'f':
+        elif a == "f":
             correct_answers.append(6)
         else:
-            raise Exception('Unknown answer:', question)
+            raise Exception("Unknown answer:", question)
 
     question_data = {
-        'question_text': udemy_question_text,
-        'answers': answers,
-        'explanation': explanation,
-        'correct_answers_count': len(correct_answers),
-        'correct_answers': correct_answers,
-        'meta': meta
+        "question_text": udemy_question_text,
+        "answers": answers,
+        "explanation": explanation,
+        "correct_answers_count": len(correct_answers),
+        "correct_answers": correct_answers,
+        "meta": meta,
     }
 
     return question_data
 
 
 def _convert_old_to_question_data(q):
-    for a in q['answers']:
-        a['text'] = a.pop('description')
+    for a in q["answers"]:
+        a["text"] = a.pop("description")
 
     question_data = {
-        'question_text': q['description'],
-        'answers': q['answers'],
-        'explanation': q['explanation'],
-        'correct_answers_count': q['correct_answers_count'],
-        'correct_answers': q['correct_answers']
+        "question_text": q["description"],
+        "answers": q["answers"],
+        "explanation": q["explanation"],
+        "correct_answers_count": q["correct_answers_count"],
+        "correct_answers": q["correct_answers"],
     }
 
 
@@ -348,15 +341,16 @@ def sync_questions_with_local_db(token_data):
         questions_collection.insert_one(question_data)
 
     import json
-    file_name = 'src/services/q.json'
-    with open(file_name, 'r') as f:
+
+    file_name = "src/services/q.json"
+    with open(file_name, "r") as f:
         z = json.load(f)
 
-        data = z['data']
+        data = z["data"]
         for q in data:
             # _convert_old_to_question_data(q)
             question_data = _convert_udemy_to_question_data(q)
-            question_data['publish_date'] = dt.now()
+            question_data["publish_date"] = dt.now()
 
             # insert_to_db(question_data)
         update_meta_data()

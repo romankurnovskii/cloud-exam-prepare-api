@@ -6,13 +6,15 @@ from src.common.configs import ExamSubscriptions
 
 
 class MetaDataType(enum.Enum):
-    QUESTIONS = 'QUESTIONS'
-    EXAMS = 'EXAMS'
+    QUESTIONS = "QUESTIONS"
+    EXAMS = "EXAMS"
+
 
 class MetaDataExamType(TypedDict):
-    code: ExamSubscriptions ## TODO remove 'ALL' from list
+    code: ExamSubscriptions  ## TODO remove 'ALL' from list
     name: str
     free: bool
+
 
 class AnswerType(TypedDict):
     id: int
@@ -37,6 +39,7 @@ class QuestionDataType(TypedDict):
         - https://peps.python.org/pep-0589/
         - https://pymongo.readthedocs.io/en/stable/examples/type_hints.html#typed-collection
     """
+
     exam_code: str
     question_text: str
     correct_answers_count: int
