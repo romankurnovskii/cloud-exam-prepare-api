@@ -1,5 +1,5 @@
 certifi==2022.12.7
-charset-normalizer==2.1.1
+charset-normalizer==3.3.2
 click==7.1.2
 dnspython==2.2.1
 ecdsa==0.18.0
